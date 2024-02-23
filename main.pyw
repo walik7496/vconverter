@@ -13,29 +13,29 @@ class VideoConverterApp:
         self.master = master
         master.title("Video Converter")
 
-        self.input_path_label = tk.Label(master, text="Вхідний шлях:")
+        self.input_path_label = tk.Label(master, text="Input file:")
         self.input_path_label.grid(row=0, column=0, sticky="w")
 
         self.input_path_entry = tk.Entry(master, width=50)
         self.input_path_entry.grid(row=0, column=1)
 
-        self.browse_button = tk.Button(master, text="Обрати", command=self.browse)
+        self.browse_button = tk.Button(master, text="Select", command=self.browse)
         self.browse_button.grid(row=0, column=2)
 
-        self.output_extension_label = tk.Label(master, text="Вихідне розширення:")
+        self.output_extension_label = tk.Label(master, text="Output extension:")
         self.output_extension_label.grid(row=1, column=0, sticky="w")
 
         self.output_extension_entry = tk.Entry(master)
         self.output_extension_entry.insert(tk.END, ".avi")
         self.output_extension_entry.grid(row=1, column=1)
 
-        self.convert_button = tk.Button(master, text="Конвертувати", command=self.convert)
+        self.convert_button = tk.Button(master, text="Convert", command=self.convert)
         self.convert_button.grid(row=2, column=1)
 
-        self.stop_button = tk.Button(master, text="Перервати", command=self.stop_conversion, state="disabled")
+        self.stop_button = tk.Button(master, text="Break", command=self.stop_conversion, state="disabled")
         self.stop_button.grid(row=2, column=2)
 
-        self.status_label = tk.Label(master, text="Статус конвертації:")
+        self.status_label = tk.Label(master, text="Conversion status:")
         self.status_label.grid(row=3, column=0, sticky="w")
 
         self.status_text = tk.Text(master, height=5, width=50)
@@ -56,36 +56,36 @@ class VideoConverterApp:
         output_extension = self.output_extension_entry.get()
 
         if not input_path:
-            messagebox.showerror("Помилка", "Будь ласка, виберіть вхідний файл")
+            messagebox.showerror("Error", "Please, select an input file")
             return
 
         if not output_extension:
-            messagebox.showerror("Помилка", "Будь ласка, введіть вихідне розширення")
+            messagebox.showerror("Error", "Please, enter the output extension")
             return
 
         output_path = os.path.splitext(input_path)[0] + output_extension
-        command = ['ffmpeg', '-i', input_path, '-crf', '20', output_path]  # Налаштований параметр CRF
+        command = ['ffmpeg', '-i', input_path, '-crf', '20', output_path]
 
         try:
             self.stop_button.config(state="normal")
             self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             threading.Thread(target=self.monitor_progress, daemon=True).start()
         except Exception as e:
-            messagebox.showerror("Помилка", f"Помилка конвертації: {str(e)}")
+            messagebox.showerror("Error", f"Conversion error: {str(e)}")
 
     def monitor_progress(self):
         for line in self.process.stdout:
             self.status_text.insert(tk.END, line)
             self.status_text.see(tk.END)
-            if "Duration" in line:  # Шукаємо початок виводу відео
+            if "Duration" in line:
                 self.progress_bar["maximum"] = self.get_video_duration(line)
-            elif "time=" in line:  # Оновлення прогресу
+            elif "time=" in line:
                 current_time = self.get_current_time(line)
                 if current_time is not None:
                     self.progress_bar["value"] = current_time
 
         self.progress_bar.stop()
-        self.status_text.insert(tk.END, "Конвертація завершена\n")
+        self.status_text.insert(tk.END, "The conversion is complete\n")
         self.stop_button.config(state="disabled")
 
     def get_video_duration(self, line):
@@ -111,7 +111,7 @@ class VideoConverterApp:
     def stop_conversion(self):
         if self.process is not None:
             self.process.terminate()
-            self.status_text.insert(tk.END, "Конвертація перервана\n")
+            self.status_text.insert(tk.END, "Conversion aborted\n")
             self.stop_button.config(state="disabled")
 
 root = tk.Tk()
